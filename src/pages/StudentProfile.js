@@ -17,7 +17,7 @@ const StudentProfile = () => {
     status: 'Active',
     batch: '2023',
     currentSemester: '5th Semester',
-    creditCompleted: '75',i
+    creditCompleted: '75',
     totalCredits: '140',
     cgpa: '3.15',
     academicStatus: 'Good Standing',
