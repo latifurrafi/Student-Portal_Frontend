@@ -1,21 +1,23 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import authService from '../services/authService';
+import studentService from '../services/paymentService';
 
 const StudentProfile = () => {
+  const [paymentData, setPaymentData] = useState(null);
+  const [personalData, setPersonalData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const userInfo = authService.getUserInfo();
+
   const studentData = {
     studentName: 'MD. LATIFUR RAHMAN',
     studentId: '024231000510145',
     department: 'Computer Science & Engineering',
     program: 'BSc in CSE',
     status: 'Active',
-    email: 'latifur.rahman@student.diu.edu.bd',
-    phone: '+880 1712345678',
-    dateOfBirth: '15 March 2000',
-    gender: 'Male',
-    bloodGroup: 'B+',
-    address: 'Dhaka, Bangladesh',
     batch: '2023',
     currentSemester: '5th Semester',
-    creditCompleted: '75',
+    creditCompleted: '75',i
     totalCredits: '140',
     cgpa: '3.15',
     academicStatus: 'Good Standing',
@@ -23,11 +25,44 @@ const StudentProfile = () => {
     guardianName: 'Abdul Rahman',
     guardianPhone: '+880 1812345678',
     guardianRelation: 'Father',
-    totalPayable: '603,900.00',
-    totalPaid: '558,400.00',
-    totalDue: '45,500.00',
-    paymentStatus: 'Partial',
   };
+
+  // Fetch data from backend
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!userInfo?.studentId) {
+        setError('No student ID available');
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        // Fetch payment data
+        const paymentResult = await studentService.getStudentPaymentInfo(userInfo.studentId);
+        if (paymentResult.success) {
+          setPaymentData(paymentResult.data);
+        }
+
+        // Fetch personal data
+        const personalResult = await studentService.getStudentPersonalInfo(userInfo.studentId);
+        if (personalResult.success) {
+          setPersonalData(personalResult.data);
+        }
+
+        // Set error if both failed
+        if (!paymentResult.success && !personalResult.success) {
+          setError('Failed to fetch data');
+        }
+      } catch (err) {
+        setError('Failed to fetch data');
+        console.error('Data fetch error:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [userInfo?.studentId]);
 
   const recentActivities = [
     {
@@ -65,6 +100,27 @@ const StudentProfile = () => {
     </div>
   );
 
+  const getPaymentStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'paid':
+      case 'complete':
+        return 'success';
+      case 'partial':
+      case 'pending':
+        return 'warning';
+      case 'overdue':
+      case 'unpaid':
+        return 'error';
+      default:
+        return 'success';
+    }
+  };
+
+  const formatCurrency = (amount) => {
+    if (!amount) return '৳0.00';
+    return `৳${parseFloat(amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+  };
+
   return (
     <div>
       {/* Page Title */}
@@ -80,8 +136,10 @@ const StudentProfile = () => {
             <i className="fas fa-user text-white text-3xl"></i>
           </div>
           <div className="flex-1">
-            <h2 className="text-2xl font-bold text-gray-900">{studentData.studentName}</h2>
-            <p className="text-gray-600">Student ID: {studentData.studentId}</p>
+            <h2 className="text-2xl font-bold text-gray-900">
+              {personalData?.name || studentData.studentName}
+            </h2>
+            <p className="text-gray-600">Student ID: {userInfo?.studentId || studentData.studentId}</p>
             <p className="text-gray-600">{studentData.department} • {studentData.program}</p>
             <div className="flex items-center mt-2">
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -108,16 +166,16 @@ const StudentProfile = () => {
           </div>
           
           <div className="space-y-4">
-            <InfoRow label="Full Name" value={studentData.studentName} />
-            <InfoRow label="Student ID" value={studentData.studentId} />
-            <InfoRow label="Email" value={studentData.email} />
-            <InfoRow label="Phone" value={studentData.phone} />
-            <InfoRow label="Date of Birth" value={studentData.dateOfBirth} />
-            <InfoRow label="Gender" value={studentData.gender} />
-            <InfoRow label="Blood Group" value={studentData.bloodGroup} />
+            <InfoRow label="Full Name" value={personalData?.name || studentData.studentName} />
+            <InfoRow label="Student ID" value={userInfo?.studentId || studentData.studentId} />
+            <InfoRow label="Email" value={personalData?.email || 'N/A'} />
+            <InfoRow label="Phone" value={personalData?.phone || 'N/A'} />
+            <InfoRow label="Date of Birth" value={personalData?.date_of_birth || 'N/A'} />
+            <InfoRow label="Gender" value={personalData?.gender || 'N/A'} />
+            <InfoRow label="Blood Group" value={personalData?.blood_group || 'N/A'} />
             <div className="flex justify-between items-center py-2">
               <span className="text-gray-600 font-medium">Address:</span>
-              <span className="text-gray-900 text-right">{studentData.address}</span>
+              <span className="text-gray-900 text-right">{personalData?.address || 'N/A'}</span>
             </div>
           </div>
         </div>
@@ -166,17 +224,61 @@ const StudentProfile = () => {
 
         {/* Financial Information */}
         <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center mb-4">
-            <i className="fas fa-dollar-sign text-yellow-500 mr-2"></i>
-            <h3 className="text-lg font-semibold text-gray-900">Financial Summary</h3>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <i className="fas fa-dollar-sign text-yellow-500 mr-2"></i>
+              <h3 className="text-lg font-semibold text-gray-900">Financial Summary</h3>
+            </div>
+            {isLoading && (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+            )}
           </div>
           
+          {error ? (
+            <div className="text-red-600 text-sm mb-4">
+              <i className="fas fa-exclamation-circle mr-1"></i>
+              {error}
+            </div>
+          ) : null}
+          
           <div className="space-y-4">
-            <InfoRow label="Total Payable" value={`৳${studentData.totalPayable}`} />
-            <InfoRow label="Total Paid" value={`৳${studentData.totalPaid}`} />
-            <InfoRow label="Total Due" value={`৳${studentData.totalDue}`} />
-            <InfoRow label="Payment Status" value={studentData.paymentStatus} isStatus={true} statusType="success" />
+            <InfoRow 
+              label="Total Payable" 
+              value={formatCurrency(paymentData?.total_payable || '0')} 
+            />
+            <InfoRow 
+              label="Total Paid" 
+              value={formatCurrency(paymentData?.total_paid || '0')} 
+            />
+            <InfoRow 
+              label="Total Due" 
+              value={formatCurrency(paymentData?.total_due || '0')} 
+            />
+            <InfoRow 
+              label="Payment Status" 
+              value={paymentData?.payment_status || 'N/A'} 
+              isStatus={true} 
+              statusType={getPaymentStatusColor(paymentData?.payment_status)} 
+            />
           </div>
+
+          {/* Payment Progress Bar */}
+          {paymentData && (
+            <div className="mt-4">
+              <div className="flex justify-between text-sm text-gray-600 mb-2">
+                <span>Payment Progress</span>
+                <span>{Math.round((paymentData.total_paid / paymentData.total_payable) * 100)}%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-green-600 h-2 rounded-full transition-all duration-300"
+                  style={{ 
+                    width: `${Math.min((paymentData.total_paid / paymentData.total_payable) * 100, 100)}%` 
+                  }}
+                ></div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
