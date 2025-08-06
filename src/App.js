@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import StudentProfile from './pages/StudentProfile';
+import Result from './pages/Result';
 
 function App() {
   return (
@@ -34,6 +35,14 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <StudentProfile />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/result" element={
+          <ProtectedRoute>
+            <Layout>
+              <Result />
             </Layout>
           </ProtectedRoute>
         } />

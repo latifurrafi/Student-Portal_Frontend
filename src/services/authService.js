@@ -39,13 +39,13 @@ class AuthService {
       return true;
     } catch (error) {
       // Try JWT token format as fallback
-      try {
-        const payload = this.decodeToken(token);
-        const currentTime = Date.now() / 1000;
-        return payload.exp > currentTime;
+    try {
+      const payload = this.decodeToken(token);
+      const currentTime = Date.now() / 1000;
+      return payload.exp > currentTime;
       } catch (jwtError) {
-        this.removeToken();
-        return false;
+      this.removeToken();
+      return false;
       }
     }
   }
@@ -88,7 +88,7 @@ class AuthService {
           // Add other user fields as needed
         };
       } catch (jwtError) {
-        return null;
+      return null;
       }
     }
   }

@@ -5,6 +5,7 @@ import studentService from '../services/paymentService';
 const StudentProfile = () => {
   const [paymentData, setPaymentData] = useState(null);
   const [personalData, setPersonalData] = useState(null);
+  const [academicData, setAcademicData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const userInfo = authService.getUserInfo();
@@ -49,8 +50,14 @@ const StudentProfile = () => {
           setPersonalData(personalResult.data);
         }
 
-        // Set error if both failed
-        if (!paymentResult.success && !personalResult.success) {
+        // Fetch academic data
+        const academicResult = await studentService.getStudentAcademicInfo(userInfo.studentId);
+        if (academicResult.success) {
+          setAcademicData(academicResult.data);
+        }
+
+        // Set error if all failed
+        if (!paymentResult.success && !personalResult.success && !academicResult.success) {
           setError('Failed to fetch data');
         }
       } catch (err) {
@@ -64,26 +71,6 @@ const StudentProfile = () => {
     fetchData();
   }, [userInfo?.studentId]);
 
-  const recentActivities = [
-    {
-      title: 'Course Registration Completed',
-      description: 'Successfully registered for 5th semester courses',
-      timeAgo: '2 hours ago',
-      color: 'green',
-    },
-    {
-      title: 'Payment Made',
-      description: 'Tuition fee payment of ৳45,000 completed',
-      timeAgo: '1 day ago',
-      color: 'blue',
-    },
-    {
-      title: 'Result Published',
-      description: '4th semester results are now available',
-      timeAgo: '3 days ago',
-      color: 'yellow',
-    },
-  ];
 
   const InfoRow = ({ label, value, isStatus = false, statusType = '' }) => (
     <div className="flex justify-between items-center py-2 border-b border-gray-100">
@@ -188,16 +175,16 @@ const StudentProfile = () => {
           </div>
           
           <div className="space-y-4">
-            <InfoRow label="Department" value={studentData.department} />
-            <InfoRow label="Program" value={studentData.program} />
-            <InfoRow label="Batch" value={studentData.batch} />
-            <InfoRow label="Current Semester" value={studentData.currentSemester} />
-            <InfoRow label="Credit Completed" value={`${studentData.creditCompleted} / ${studentData.totalCredits}`} />
-            <InfoRow label="CGPA" value={studentData.cgpa} />
-            <InfoRow label="Academic Status" value={studentData.academicStatus} isStatus={true} statusType="success" />
+            <InfoRow label="Department" value={academicData?.department || studentData.department} />
+            <InfoRow label="Program" value={academicData?.program || studentData.program} />
+            <InfoRow label="Batch" value={academicData?.batch || studentData.batch} />
+            <InfoRow label="Current Semester" value={academicData?.current_semester || studentData.currentSemester} />
+            <InfoRow label="Credit Completed" value={academicData ? `${academicData.credit_completed || 0} / ${academicData.total_credits || 0}` : `${studentData.creditCompleted} / ${studentData.totalCredits}`} />
+            <InfoRow label="CGPA" value={academicData?.cgpa || studentData.cgpa} />
+            <InfoRow label="Academic Status" value={academicData?.academic_status || studentData.academicStatus} isStatus={true} statusType="success" />
             <div className="flex justify-between items-center py-2">
               <span className="text-gray-600 font-medium">Admission Date:</span>
-              <span className="text-gray-900">{studentData.admissionDate}</span>
+              <span className="text-gray-900">{academicData?.admission_date || studentData.admissionDate}</span>
             </div>
           </div>
         </div>
@@ -213,12 +200,9 @@ const StudentProfile = () => {
           </div>
           
           <div className="space-y-4">
-            <InfoRow label="Guardian Name" value={studentData.guardianName} />
-            <InfoRow label="Guardian Phone" value={studentData.guardianPhone} />
-            <div className="flex justify-between items-center py-2">
-              <span className="text-gray-600 font-medium">Relationship:</span>
-              <span className="text-gray-900">{studentData.guardianRelation}</span>
-            </div>
+            <InfoRow label="Guardian Name" value={personalData?.guardian_name || studentData.guardianName} />
+            <InfoRow label="Guardian Phone" value={personalData?.guardian_phone || studentData.guardianPhone} />
+            <InfoRow label="Relationship" value={personalData?.guardian_relation || studentData.guardianRelation} />
           </div>
         </div>
 
@@ -226,8 +210,8 @@ const StudentProfile = () => {
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
-              <i className="fas fa-dollar-sign text-yellow-500 mr-2"></i>
-              <h3 className="text-lg font-semibold text-gray-900">Financial Summary</h3>
+            <i className="fas fa-dollar-sign text-yellow-500 mr-2"></i>
+            <h3 className="text-lg font-semibold text-gray-900">Financial Summary</h3>
             </div>
             {isLoading && (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
@@ -279,27 +263,6 @@ const StudentProfile = () => {
               </div>
             </div>
           )}
-        </div>
-      </div>
-
-      {/* Recent Activities */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mt-6">
-        <div className="flex items-center mb-4">
-          <i className="fas fa-history text-purple-500 mr-2"></i>
-          <h3 className="text-lg font-semibold text-gray-900">Recent Activities</h3>
-        </div>
-        
-        <div className="space-y-3">
-          {recentActivities.map((activity, index) => (
-            <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-              <div className={`w-2 h-2 bg-${activity.color}-400 rounded-full`}></div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">{activity.title}</p>
-                <p className="text-xs text-gray-500">{activity.description}</p>
-              </div>
-              <span className="text-xs text-gray-400">{activity.timeAgo}</span>
-            </div>
-          ))}
         </div>
       </div>
     </div>

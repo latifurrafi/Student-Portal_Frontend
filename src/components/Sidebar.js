@@ -8,7 +8,7 @@ const Sidebar = ({ isOpen, currentPath }) => {
   const navigationItems = [
     { path: '/dashboard', icon: 'fas fa-tachometer-alt', label: 'Dashboard' },
     { path: '/profile', icon: 'fas fa-user', label: 'Student Profile' },
-    { path: '#', icon: 'fas fa-chart-line', label: 'Result' },
+    { path: '/result', icon: 'fas fa-chart-line', label: 'Result' },
   ];
 
   const handleLogout = () => {

@@ -119,6 +119,35 @@ class StudentService {
       };
     }
   }
+
+  // Get student academic information
+  async getStudentAcademicInfo(studentId) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/${studentId}/academic`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to fetch academic info' }));
+        throw new Error(errorData.error || `Failed to fetch academic info: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return {
+        success: true,
+        data: data
+      };
+    } catch (error) {
+      console.error('Academic info error:', error);
+      return {
+        success: false,
+        message: error.message || 'Failed to fetch academic information'
+      };
+    }
+  }
 }
 
 // Create a singleton instance

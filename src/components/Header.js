@@ -32,7 +32,7 @@ const Header = ({ onToggleSidebar }) => {
           </div>
           <div className="relative group">
             <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center cursor-pointer">
-              <i className="fas fa-user text-gray-600"></i>
+            <i className="fas fa-user text-gray-600"></i>
             </div>
             {/* Dropdown menu */}
             <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
