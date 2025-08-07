@@ -148,6 +148,64 @@ class StudentService {
       };
     }
   }
+
+  // Get available semesters for a student
+  async getAvailableSemesters(studentId) {
+    try {
+      const response = await fetch(`/available-semesters/${studentId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to fetch available semesters' }));
+        throw new Error(errorData.error || `Failed to fetch available semesters: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return {
+        success: true,
+        data: data
+      };
+    } catch (error) {
+      console.error('Available semesters fetch error:', error);
+      return {
+        success: false,
+        message: error.message || 'Failed to fetch available semesters'
+      };
+    }
+  }
+
+  // Get student result by semester
+  async getStudentResult(studentId, semesterId) {
+    try {
+      const response = await fetch(`/results/${studentId}/${semesterId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to fetch result' }));
+        throw new Error(errorData.error || `Failed to fetch result: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return {
+        success: true,
+        data: data
+      };
+    } catch (error) {
+      console.error('Result fetch error:', error);
+      return {
+        success: false,
+        message: error.message || 'Failed to fetch result data'
+      };
+    }
+  }
 }
 
 // Create a singleton instance
